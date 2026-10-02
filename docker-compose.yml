@@ -1,0 +1,23 @@
+services:
+  mongo:
+    image: mongo:7
+    container_name: scoutgrid-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  api:
+    build:
+      context: ./backend
+    container_name: scoutgrid-api
+    ports:
+      - "8000:8000"
+    environment:
+      MONGODB_URI: mongodb://mongo:27017
+      MONGODB_DATABASE: scoutgrid
+    depends_on:
+      - mongo
+
+volumes:
+  mongo_data:

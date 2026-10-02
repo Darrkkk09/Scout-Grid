@@ -1,0 +1,327 @@
+{
+  "metadata": {
+    "timestamp": "2026-10-01T22:52:07.071960",
+    "duration_seconds": 120.88,
+    "mongo_candidates": 31002,
+    "opensearch_candidates": 31002,
+    "warmup_iterations": 10,
+    "measured_iterations": 50,
+    "page_size": 20,
+    "environment": {
+      "mongodb": "Local MongoDB (localhost:27017)",
+      "opensearch": "Aiven OpenSearch Cloud Service (HTTPS)"
+    }
+  },
+  "query_benchmarks": [
+    {
+      "id": "Q1",
+      "category": "Skill",
+      "query": "Python developers",
+      "mongo_matched": 4663,
+      "mongo_stats": {
+        "min": 59.141,
+        "avg": 69.957,
+        "p50": 69.591,
+        "p95": 76.783,
+        "p99": 81.741,
+        "max": 84.836
+      },
+      "opensearch_matched": 4663,
+      "opensearch_stats": {
+        "min": 56.451,
+        "avg": 62.839,
+        "p50": 60.944,
+        "p95": 70.581,
+        "p99": 104.492,
+        "max": 128.74
+      },
+      "opensearch_raw_stats": {
+        "min": 55.402,
+        "avg": 59.856,
+        "p50": 58.632,
+        "p95": 64.865,
+        "p99": 89.089,
+        "max": 95.64
+      }
+    },
+    {
+      "id": "Q2",
+      "category": "Skill + Location",
+      "query": "Python developers in Bangalore",
+      "mongo_matched": 573,
+      "mongo_stats": {
+        "min": 41.533,
+        "avg": 73.284,
+        "p50": 82.754,
+        "p95": 90.777,
+        "p99": 92.496,
+        "max": 93.194
+      },
+      "opensearch_matched": 573,
+      "opensearch_stats": {
+        "min": 56.183,
+        "avg": 63.87,
+        "p50": 59.339,
+        "p95": 65.576,
+        "p99": 155.713,
+        "max": 240.538
+      },
+      "opensearch_raw_stats": {
+        "min": 54.632,
+        "avg": 61.064,
+        "p50": 57.674,
+        "p95": 62.648,
+        "p99": 136.43,
+        "max": 201.295
+      }
+    },
+    {
+      "id": "Q3",
+      "category": "Multiple Skills",
+      "query": "Python FastAPI developers",
+      "mongo_matched": 2723,
+      "mongo_stats": {
+        "min": 32.148,
+        "avg": 39.331,
+        "p50": 38.863,
+        "p95": 46.916,
+        "p99": 48.047,
+        "max": 48.797
+      },
+      "opensearch_matched": 2723,
+      "opensearch_stats": {
+        "min": 56.209,
+        "avg": 59.479,
+        "p50": 58.832,
+        "p95": 65.434,
+        "p99": 72.512,
+        "max": 76.692
+      },
+      "opensearch_raw_stats": {
+        "min": 53.857,
+        "avg": 61.686,
+        "p50": 58.278,
+        "p95": 71.233,
+        "p99": 123.441,
+        "max": 164.628
+      }
+    },
+    {
+      "id": "Q4",
+      "category": "Skill + Experience",
+      "query": "Python backend engineers with 3+ years of experience",
+      "mongo_matched": 196,
+      "mongo_stats": {
+        "min": 132.714,
+        "avg": 159.261,
+        "p50": 155.898,
+        "p95": 180.093,
+        "p99": 187.778,
+        "max": 191.64
+      },
+      "opensearch_matched": 5168,
+      "opensearch_stats": {
+        "min": 55.779,
+        "avg": 64.818,
+        "p50": 59.636,
+        "p95": 65.756,
+        "p99": 186.115,
+        "max": 300.853
+      },
+      "opensearch_raw_stats": {
+        "min": 55.337,
+        "avg": 60.376,
+        "p50": 59.332,
+        "p95": 65.681,
+        "p99": 78.901,
+        "max": 86.909
+      }
+    },
+    {
+      "id": "Q5",
+      "category": "Skill + Location + Experience",
+      "query": "Python backend engineers with 3+ years of experience in Bangalore",
+      "mongo_matched": 27,
+      "mongo_stats": {
+        "min": 76.552,
+        "avg": 97.977,
+        "p50": 99.845,
+        "p95": 111.3,
+        "p99": 118.283,
+        "max": 120.516
+      },
+      "opensearch_matched": 638,
+      "opensearch_stats": {
+        "min": 56.031,
+        "avg": 89.602,
+        "p50": 59.644,
+        "p95": 177.219,
+        "p99": 614.994,
+        "max": 1029.557
+      },
+      "opensearch_raw_stats": {
+        "min": 54.292,
+        "avg": 63.718,
+        "p50": 57.364,
+        "p95": 67.155,
+        "p99": 196.983,
+        "max": 316.985
+      }
+    },
+    {
+      "id": "Q6",
+      "category": "Different Technology",
+      "query": "React developers with 2+ years of experience",
+      "mongo_matched": 2043,
+      "mongo_stats": {
+        "min": 49.96,
+        "avg": 56.406,
+        "p50": 56.715,
+        "p95": 60.509,
+        "p99": 61.097,
+        "max": 61.424
+      },
+      "opensearch_matched": 2043,
+      "opensearch_stats": {
+        "min": 54.123,
+        "avg": 59.665,
+        "p50": 58.599,
+        "p95": 63.009,
+        "p99": 89.747,
+        "max": 113.71
+      },
+      "opensearch_raw_stats": {
+        "min": 54.783,
+        "avg": 59.692,
+        "p50": 56.906,
+        "p95": 67.39,
+        "p99": 114.251,
+        "max": 147.226
+      }
+    },
+    {
+      "id": "Q7",
+      "category": "Historical Title",
+      "query": "software engineers with 4+ years of experience",
+      "mongo_matched": 7615,
+      "mongo_stats": {
+        "min": 111.224,
+        "avg": 118.444,
+        "p50": 117.908,
+        "p95": 126.228,
+        "p99": 127.963,
+        "max": 128.001
+      },
+      "opensearch_matched": 8630,
+      "opensearch_stats": {
+        "min": 56.07,
+        "avg": 60.15,
+        "p50": 58.823,
+        "p95": 68.121,
+        "p99": 77.148,
+        "max": 77.327
+      },
+      "opensearch_raw_stats": {
+        "min": 55.444,
+        "avg": 61.612,
+        "p50": 58.681,
+        "p95": 66.644,
+        "p99": 115.334,
+        "max": 160.004
+      }
+    },
+    {
+      "id": "Q8",
+      "category": "Low-Result Query",
+      "query": "Rust developers with 10+ years of experience in Hyderabad",
+      "mongo_matched": 439,
+      "mongo_stats": {
+        "min": 45.24,
+        "avg": 56.707,
+        "p50": 56.414,
+        "p95": 61.85,
+        "p99": 65.309,
+        "max": 65.768
+      },
+      "opensearch_matched": 439,
+      "opensearch_stats": {
+        "min": 53.358,
+        "avg": 58.527,
+        "p50": 57.719,
+        "p95": 65.652,
+        "p99": 74.529,
+        "max": 82.074
+      },
+      "opensearch_raw_stats": {
+        "min": 53.452,
+        "avg": 61.03,
+        "p50": 57.093,
+        "p95": 71.212,
+        "p99": 137.744,
+        "max": 154.664
+      }
+    }
+  ],
+  "pagination_benchmarks": [
+    {
+      "page": 1,
+      "limit": 20,
+      "mongo_stats": {
+        "min": 34.784,
+        "avg": 69.398,
+        "p50": 70.747,
+        "p95": 73.35,
+        "p99": 80.135,
+        "max": 80.573
+      },
+      "opensearch_stats": {
+        "min": 54.424,
+        "avg": 58.664,
+        "p50": 56.879,
+        "p95": 63.907,
+        "p99": 93.588,
+        "max": 108.933
+      }
+    },
+    {
+      "page": 10,
+      "limit": 20,
+      "mongo_stats": {
+        "min": 55.567,
+        "avg": 72.299,
+        "p50": 72.044,
+        "p95": 81.842,
+        "p99": 84.869,
+        "max": 86.168
+      },
+      "opensearch_stats": {
+        "min": 54.049,
+        "avg": 60.779,
+        "p50": 57.535,
+        "p95": 81.961,
+        "p99": 113.029,
+        "max": 114.222
+      }
+    },
+    {
+      "page": 100,
+      "limit": 20,
+      "mongo_stats": {
+        "min": 98.281,
+        "avg": 121.718,
+        "p50": 110.404,
+        "p95": 222.945,
+        "p99": 229.338,
+        "max": 229.693
+      },
+      "opensearch_stats": {
+        "min": 55.516,
+        "avg": 75.04,
+        "p50": 62.831,
+        "p95": 111.54,
+        "p99": 247.289,
+        "max": 282.975
+      }
+    }
+  ]
+}
