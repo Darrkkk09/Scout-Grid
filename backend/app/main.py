@@ -11,6 +11,13 @@ from app.routes import candidates, search
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await connect_to_mongo()
+    import logging
+    from app.services.llm_requirement_extractor import LLMRequirementExtractor
+    extractor = LLMRequirementExtractor()
+    if not extractor.is_configured():
+        logging.getLogger(__name__).warning(
+            "LLM extraction is unconfigured (no Gemini API keys found). Automatically falling back to deterministic RequirementExtractor."
+        )
     yield
     await close_mongo_connection()
 

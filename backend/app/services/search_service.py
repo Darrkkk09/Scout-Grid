@@ -15,6 +15,7 @@ from app.models.search import (
     SearchRequest,
     SearchResponse,
 )
+from app.services.hybrid_requirement_extractor import HybridRequirementExtractor
 from app.services.requirement_extractor import RequirementExtractor
 
 
@@ -114,8 +115,8 @@ class SearchService:
         pagination_mode: PaginationMode = PaginationMode.OFFSET,
         cursor_token: Optional[str] = None,
     ) -> SearchResponse:
-        # Extract structured criteria
-        requirements = RequirementExtractor.extract(query)
+        # Extract structured criteria via HybridRequirementExtractor (LLM-first with fallback)
+        requirements = HybridRequirementExtractor().extract(query)
 
         # Build base MongoDB query filter
         base_filter = self.build_mongo_query(requirements, filters)

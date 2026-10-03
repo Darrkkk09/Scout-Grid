@@ -1,17 +1,22 @@
 import logging
-from typing import Any, Dict
+import os
+from typing import Any, Dict, Optional, Tuple
 from opensearchpy import OpenSearch
+from app.services.embedding_service import candidate_to_semantic_text, EmbeddingService
 from app.services.opensearch_client import get_opensearch_client
 
 logger = logging.getLogger(__name__)
 
-CANDIDATES_INDEX_NAME = "candidates"
+# Configurable index version / name
+CANDIDATES_INDEX_NAME = os.getenv("OPENSEARCH_INDEX_NAME", "candidates")
+EMBEDDING_DIMENSION = int(os.getenv("EMBEDDING_DIMENSION", "384"))
 
 CANDIDATE_INDEX_MAPPING: Dict[str, Any] = {
     "settings": {
         "index": {
             "number_of_shards": 1,
             "number_of_replicas": 1,
+            "knn": True,  # Enable k-NN plugin for vector search
         }
     },
     "mappings": {
@@ -33,16 +38,30 @@ CANDIDATE_INDEX_MAPPING: Dict[str, Any] = {
                     "description": {"type": "text"},
                 },
             },
+            # k-NN Vector Embedding Field Definition
+            "embedding": {
+                "type": "knn_vector",
+                "dimension": EMBEDDING_DIMENSION,
+                "method": {
+                    "name": "hnsw",
+                    "space_type": "cosinesimil",
+                    "engine": "lucene",
+                },
+            },
         }
     },
 }
 
 
-def candidate_to_search_document(candidate: Dict[str, Any]) -> Dict[str, Any]:
+def candidate_to_search_document(
+    candidate: Dict[str, Any],
+    embedding_service: Optional[EmbeddingService] = None,
+    generate_embedding: bool = False,
+) -> Dict[str, Any]:
     """
     Transforms a raw MongoDB candidate dictionary or Candidate model dict into
     an OpenSearch indexable document.
-    Ensures _id is serialized to candidate_id string.
+    Optionally computes embedding vector if generate_embedding is True and embedding is missing.
     """
     doc = dict(candidate)
     
@@ -88,6 +107,15 @@ def candidate_to_search_document(candidate: Dict[str, Any]) -> Dict[str, Any]:
     doc["location"] = str(doc.get("location", ""))
     doc["education"] = str(doc.get("education", ""))
 
+    # Vector embedding handling
+    if "embedding" in doc and isinstance(doc["embedding"], list):
+        # Already embedded
+        pass
+    elif generate_embedding:
+        svc = embedding_service or EmbeddingService()
+        sem_text = candidate_to_semantic_text(doc)
+        doc["embedding"] = svc.embed_text(sem_text)
+
     return doc
 
 
@@ -98,7 +126,7 @@ def check_index_exists(client: OpenSearch, index_name: str = CANDIDATES_INDEX_NA
 
 def create_candidate_index(client: OpenSearch, index_name: str = CANDIDATES_INDEX_NAME) -> bool:
     """
-    Safely creates the candidate OpenSearch index with mapping if it does not already exist.
+    Safely creates the candidate OpenSearch index with k-NN vector mapping if it does not already exist.
     Returns True if created, False if it already existed.
     """
     if check_index_exists(client, index_name):
@@ -106,5 +134,5 @@ def create_candidate_index(client: OpenSearch, index_name: str = CANDIDATES_INDE
         return False
 
     client.indices.create(index=index_name, body=CANDIDATE_INDEX_MAPPING)
-    logger.info("OpenSearch index '%s' created successfully.", index_name)
+    logger.info("OpenSearch index '%s' created successfully with k-NN vector mapping.", index_name)
     return True

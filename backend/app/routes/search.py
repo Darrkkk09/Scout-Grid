@@ -45,12 +45,13 @@ async def search_candidates(
     response_model=SearchResponse,
     status_code=status.HTTP_200_OK,
     summary="Search candidates via natural language query (OpenSearch)",
-    description="Extracts search requirements from query text and returns matching candidates from OpenSearch.",
+    description="Extracts search requirements from query text and returns matching candidates from OpenSearch using BM25, vector, or hybrid RRF search.",
 )
 async def search_candidates_opensearch(
     request: SearchRequest,
     page: Optional[int] = Query(None, ge=1),
     limit: Optional[int] = Query(None, ge=1, le=100),
+    search_mode: str = Query("hybrid", description="Search mode: 'hybrid' (default), 'bm25', or 'vector'"),
     client: OpenSearch = Depends(get_opensearch_client),
 ) -> SearchResponse:
     effective_page = page if page is not None else request.page
@@ -62,6 +63,7 @@ async def search_candidates_opensearch(
         page=effective_page,
         limit=effective_limit,
         filters=request.filters,
+        search_mode=search_mode,
     )
 
 

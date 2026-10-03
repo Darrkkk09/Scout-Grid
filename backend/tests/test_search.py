@@ -5,6 +5,14 @@ from httpx import ASGITransport, AsyncClient
 
 os.environ.setdefault("MONGODB_URI", "mongodb://localhost:27017")
 os.environ.setdefault("MONGODB_DATABASE", "scoutgrid_test")
+os.environ["GEMINI_API_KEY_1"] = ""
+os.environ["GEMINI_API_KEY_2"] = ""
+os.environ["GEMINI_API_KEY_3"] = ""
+os.environ["GEMINI_API_KEY_4"] = ""
+os.environ["GEMINI_API_KEY_5"] = ""
+os.environ["GEMINI_API_KEYS"] = ""
+os.environ["GEMINI_API_KEY"] = ""
+os.environ["LLM_API_KEY"] = ""
 
 from app.database import get_db
 from app.main import app

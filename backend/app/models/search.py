@@ -16,6 +16,10 @@ class ParsedRequirements(BaseModel):
     min_experience: Optional[float] = None
     max_experience: Optional[float] = None
     job_title: Optional[str] = None
+    semantic_query: Optional[str] = Field(
+        default=None,
+        description="Semantic context or intent for non-exact skill requirements"
+    )
 
 
 class SearchRequest(BaseModel):
