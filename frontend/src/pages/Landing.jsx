@@ -113,7 +113,7 @@ export const Landing = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-[11px] px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 font-medium border border-emerald-200">
-                    FastAPI MongoDB Live
+                    Live Candidate Search
                   </span>
                 </div>
               </div>
@@ -136,7 +136,7 @@ export const Landing = () => {
                   <div className="text-[11px] font-medium text-surface-500">Pipeline Match</div>
                   <div className="text-xl font-bold text-brand-600 mt-1">87%</div>
                 </div>
-              </div>
+                </div>
 
               {/* Mock Candidate Cards preview */}
               <div className="space-y-2">
@@ -152,7 +152,7 @@ export const Landing = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="hidden sm:inline-block px-2 py-0.5 rounded text-[10px] bg-surface-100 text-surface-700">
-                      Python, FastAPI, MongoDB
+                      Python, Distributed Systems, Microservices
                     </span>
                     <ChevronRight className="w-4 h-4 text-surface-400" />
                   </div>
@@ -200,7 +200,7 @@ export const Landing = () => {
               </div>
               <h3 className="text-base font-bold text-surface-900">Precision Filters</h3>
               <p className="text-xs text-surface-600 leading-relaxed">
-                Instantly query candidates by exact skills, location parameters, and experience thresholds powered by indexing.
+                Instantly query candidates by exact skills, location parameters, and experience thresholds.
               </p>
             </div>
 
@@ -210,7 +210,7 @@ export const Landing = () => {
               </div>
               <h3 className="text-base font-bold text-surface-900">Sub-Second Response</h3>
               <p className="text-xs text-surface-600 leading-relaxed">
-                Built on high-performance FastAPI backends and optimized MongoDB aggregations for zero latency.
+                Built for instant query evaluation and real-time profile matching with zero latency.
               </p>
             </div>
 
@@ -256,7 +256,7 @@ export const Landing = () => {
               </div>
               <h3 className="text-base font-bold text-surface-900 mb-2">2. Scout Candidates</h3>
               <p className="text-xs text-surface-500 leading-relaxed">
-                Review candidate profiles fetched in real time directly from our MongoDB candidate service backend.
+                Review candidate profiles matched in real time through natural language criteria extraction.
               </p>
             </div>
 
@@ -279,39 +279,39 @@ export const Landing = () => {
           <div className="max-w-3xl">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-800 text-brand-300 text-xs font-semibold mb-4 border border-surface-700">
               <Cpu className="w-3.5 h-3.5" />
-              <span>Distributed Architecture Roadmap</span>
+              <span>Enterprise Platform Capabilities</span>
             </div>
             <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight mb-4 font-sans">
-              Engineered for distributed scale
+              Engineered for enterprise scale
             </h2>
             <p className="text-sm text-surface-400 leading-relaxed mb-8">
-              ScoutGrid is designed from the ground up for massive throughput. Our architecture foundation combines high-concurrency backend microservices with robust data stores.
+              ScoutGrid is designed from the ground up for massive profile volume, high concurrency, and intelligent candidate matching.
             </p>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="p-4 rounded-xl bg-surface-800/80 border border-surface-700">
               <Database className="w-5 h-5 text-brand-400 mb-2" />
-              <div className="text-sm font-bold">MongoDB Store</div>
-              <div className="text-[11px] text-surface-400 mt-1">Active profile storage & indexed queries</div>
+              <div className="text-sm font-bold">Profile Database</div>
+              <div className="text-[11px] text-surface-400 mt-1">Verified candidate profile storage & indexing</div>
             </div>
 
             <div className="p-4 rounded-xl bg-surface-800/80 border border-surface-700">
               <Search className="w-5 h-5 text-purple-400 mb-2" />
-              <div className="text-sm font-bold">OpenSearch</div>
-              <div className="text-[11px] text-surface-400 mt-1">Vector embeddings & semantic search (Phase 2)</div>
+              <div className="text-sm font-bold">Hybrid Search</div>
+              <div className="text-[11px] text-surface-400 mt-1">Vector embeddings & semantic matching</div>
             </div>
 
             <div className="p-4 rounded-xl bg-surface-800/80 border border-surface-700">
               <GitBranch className="w-5 h-5 text-emerald-400 mb-2" />
-              <div className="text-sm font-bold">Redis & Kafka</div>
-              <div className="text-[11px] text-surface-400 mt-1">High-throughput task queueing & cache</div>
+              <div className="text-sm font-bold">Task Queueing</div>
+              <div className="text-[11px] text-surface-400 mt-1">High-throughput profile parsing & indexing</div>
             </div>
 
             <div className="p-4 rounded-xl bg-surface-800/80 border border-surface-700">
               <Cpu className="w-5 h-5 text-amber-400 mb-2" />
-              <div className="text-sm font-bold">Kubernetes</div>
-              <div className="text-[11px] text-surface-400 mt-1">Auto-scaling distributed worker cluster</div>
+              <div className="text-sm font-bold">Cloud Infrastructure</div>
+              <div className="text-[11px] text-surface-400 mt-1">Auto-scaling candidate sourcing infrastructure</div>
             </div>
           </div>
         </div>
@@ -332,8 +332,8 @@ export const Landing = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div className="p-5 rounded-2xl bg-surface-50 border border-surface-200/80">
               <CheckCircle2 className="w-5 h-5 text-brand-600 mb-2" />
-              <h4 className="text-sm font-bold text-surface-900 mb-1">FastAPI Backend</h4>
-              <p className="text-xs text-surface-600">Direct integration with production REST endpoint for zero fake data.</p>
+              <h4 className="text-sm font-bold text-surface-900 mb-1">AI Requirement Extraction</h4>
+              <p className="text-xs text-surface-600">Extracts skills, locations, and experience requirements automatically from natural language.</p>
             </div>
 
             <div className="p-5 rounded-2xl bg-surface-50 border border-surface-200/80">
@@ -398,7 +398,7 @@ export const Landing = () => {
           <div className="flex items-center gap-6">
             <span className="hover:text-surface-900 cursor-pointer">Privacy Policy</span>
             <span className="hover:text-surface-900 cursor-pointer">Terms of Service</span>
-            <span className="hover:text-surface-900 cursor-pointer font-medium text-brand-600">FastAPI REST Docs</span>
+            <span className="hover:text-surface-900 cursor-pointer">Documentation</span>
           </div>
         </div>
       </footer>

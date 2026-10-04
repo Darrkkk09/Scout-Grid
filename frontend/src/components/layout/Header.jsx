@@ -37,7 +37,7 @@ export const Header = ({ onMobileMenuToggle }) => {
       <div className="flex items-center gap-3">
         <div className="hidden sm:flex items-center gap-1 px-2.5 py-1 rounded-full bg-brand-50 border border-brand-200/70 text-brand-700 text-xs font-medium">
           <Sparkles className="w-3.5 h-3.5 text-brand-600 animate-pulse" />
-          <span>MongoDB Backend Active</span>
+          <span>Search System Active</span>
         </div>
 
         <button

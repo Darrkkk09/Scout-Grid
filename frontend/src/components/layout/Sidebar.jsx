@@ -115,17 +115,6 @@ export const Sidebar = ({ mobileOpen, onMobileClose }) => {
       </div>
 
       <div>
-        {/* Architecture Note Card */}
-        <div className="p-3 mb-4 rounded-xl bg-surface-50 border border-surface-200/80 text-xs">
-          <div className="flex items-center gap-1.5 text-brand-700 font-semibold mb-1">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>FastAPI + MongoDB</span>
-          </div>
-          <p className="text-[11px] text-surface-500 leading-normal">
-            Real candidate pipeline active. AI search ranking module pending OpenSearch rollout.
-          </p>
-        </div>
-
         {/* Bottom Nav */}
         <div className="pt-2 border-t border-surface-200/80 space-y-1">
           {bottomNavItems.map(renderNavLink)}

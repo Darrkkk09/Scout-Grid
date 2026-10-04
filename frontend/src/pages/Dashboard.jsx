@@ -113,7 +113,6 @@ export const Dashboard = () => {
             <h1 className="text-2xl sm:text-3xl font-extrabold text-surface-900 tracking-tight">
               Good morning
             </h1>
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 ring-4 ring-emerald-100" title="Backend connected" />
           </div>
           <p className="text-sm text-surface-500 mt-1 font-medium">
             Find and evaluate the right candidates faster.
@@ -140,7 +139,7 @@ export const Dashboard = () => {
         </div>
       </div>
 
-      {/* Backend Status Banner */}
+      {/* Sourcing Banner */}
       <div className="bg-gradient-to-r from-brand-900 via-surface-900 to-indigo-950 rounded-2xl p-5 text-white shadow-card flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div className="flex items-start gap-3">
           <div className="p-2.5 rounded-xl bg-white/10 text-brand-300 backdrop-blur-xs">
@@ -148,15 +147,10 @@ export const Dashboard = () => {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-sm font-bold tracking-wide text-white">FastAPI Candidate Microservice Active</h3>
-              <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase ${
-                backendStatus === 'online' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-300'
-              }`}>
-                {backendStatus === 'online' ? 'Connected (Port 8000)' : 'Connecting...'}
-              </span>
+              <h3 className="text-sm font-bold tracking-wide text-white">AI-Powered Talent Sourcing Engine Active</h3>
             </div>
             <p className="text-xs text-surface-300 mt-0.5 max-w-xl">
-              Connected directly to your backend MongoDB store. Query candidates by skills, location, and experience with live pagination.
+              Query candidates by natural language requirements, skills, location, and experience with instant search.
             </p>
           </div>
         </div>
@@ -273,7 +267,7 @@ export const Dashboard = () => {
             <div>
               <h4 className="text-xs font-bold text-surface-900 mb-1">2. Scout candidates</h4>
               <p className="text-xs text-surface-500 leading-relaxed">
-                Hit query to fetch candidate records directly from MongoDB with pagination support.
+                Execute natural language queries to search through thousands of structured candidate profiles.
               </p>
             </div>
           </div>

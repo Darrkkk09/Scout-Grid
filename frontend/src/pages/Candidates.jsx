@@ -25,7 +25,7 @@ const EXAMPLE_SEARCHES = [
   'Python backend engineers with 3+ years of experience in Bangalore',
   'React developers in Hyderabad',
   'Java Spring Boot engineers with 5 years experience',
-  'FastAPI developers in Remote',
+  'Senior Full Stack Engineers in Remote',
 ];
 
 export const Candidates = () => {
@@ -123,7 +123,7 @@ export const Candidates = () => {
       }
     } catch (err) {
       console.error('Error executing candidate search:', err);
-      setError('Unable to search candidates. Please check FastAPI backend connection.');
+      setError('Unable to search candidates. Please check network connection and try again.');
       setCandidates([]);
     } finally {
       setIsLoading(false);
@@ -182,7 +182,7 @@ export const Candidates = () => {
             )}
           </h1>
           <p className="text-xs text-surface-500 mt-1 font-medium">
-            Natural language candidate sourcing engine powered by FastAPI & MongoDB.
+            AI-powered candidate sourcing and requirement extraction engine.
           </p>
         </div>
 
