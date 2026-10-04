@@ -41,6 +41,41 @@ def decode_cursor(token: str) -> str:
         )
 
 
+from datetime import datetime, date
+
+
+def _serialize_candidate_doc(doc: dict) -> CandidateResponse:
+    doc_dict = dict(doc)
+    doc_dict["id"] = str(doc_dict.get("_id", doc_dict.get("id")))
+    
+    exp_raw = doc_dict.get("experience", [])
+    cleaned_exp = []
+    if isinstance(exp_raw, list):
+        for item in exp_raw:
+            if isinstance(item, dict):
+                entry = dict(item)
+                sd = entry.get("start_date")
+                if isinstance(sd, datetime):
+                    entry["start_date"] = sd.date()
+                elif isinstance(sd, str):
+                    try:
+                        entry["start_date"] = date.fromisoformat(sd.split("T")[0])
+                    except Exception:
+                        entry["start_date"] = date(2020, 1, 1)
+
+                ed = entry.get("end_date")
+                if isinstance(ed, datetime):
+                    entry["end_date"] = ed.date()
+                elif isinstance(ed, str):
+                    try:
+                        entry["end_date"] = date.fromisoformat(ed.split("T")[0])
+                    except Exception:
+                        entry["end_date"] = None
+                cleaned_exp.append(entry)
+    doc_dict["experience"] = cleaned_exp
+    return CandidateResponse(**doc_dict)
+
+
 class SearchService:
     """
     Candidate Search Service isolated for ScoutGrid.
@@ -156,8 +191,7 @@ class SearchService:
 
         candidates: List[CandidateResponse] = []
         for doc in docs:
-            doc["id"] = str(doc.get("_id", doc.get("id")))
-            candidates.append(CandidateResponse(**doc))
+            candidates.append(_serialize_candidate_doc(doc))
 
         return SearchResponse(
             query=query,
@@ -199,9 +233,7 @@ class SearchService:
         candidates: List[CandidateResponse] = []
 
         for doc in result_docs:
-            doc_id = str(doc.get("_id", doc.get("id")))
-            doc["id"] = doc_id
-            candidates.append(CandidateResponse(**doc))
+            candidates.append(_serialize_candidate_doc(doc))
 
         if has_next_page and candidates:
             next_cursor_str = encode_cursor(candidates[-1].id)

@@ -9,17 +9,50 @@ from app.database import get_candidates_collection
 from app.models.candidate import CandidateCreate, CandidateResponse, PaginatedCandidates
 
 
+from datetime import datetime, date
+
+
+def _clean_experience(exp_list: list) -> list:
+    cleaned = []
+    if isinstance(exp_list, list):
+        for item in exp_list:
+            if isinstance(item, dict):
+                entry = dict(item)
+                # Ensure start_date is a date object (no time)
+                sd = entry.get("start_date")
+                if isinstance(sd, datetime):
+                    entry["start_date"] = sd.date()
+                elif isinstance(sd, str):
+                    try:
+                        entry["start_date"] = date.fromisoformat(sd.split("T")[0])
+                    except Exception:
+                        entry["start_date"] = date(2020, 1, 1)
+                
+                # Ensure end_date is a date object or None
+                ed = entry.get("end_date")
+                if isinstance(ed, datetime):
+                    entry["end_date"] = ed.date()
+                elif isinstance(ed, str):
+                    try:
+                        entry["end_date"] = date.fromisoformat(ed.split("T")[0])
+                    except Exception:
+                        entry["end_date"] = None
+                
+                cleaned.append(entry)
+    return cleaned
+
+
 def _serialize(doc: dict) -> CandidateResponse:
     """Convert a MongoDB document to a CandidateResponse."""
     return CandidateResponse(
         id=str(doc["_id"]),
-        name=doc["name"],
-        email=doc["email"],
-        location=doc["location"],
-        experience_years=doc["experience_years"],
-        skills=doc["skills"],
-        education=doc["education"],
-        experience=doc.get("experience", []),
+        name=doc.get("name", ""),
+        email=doc.get("email", ""),
+        location=doc.get("location", ""),
+        experience_years=doc.get("experience_years", 0.0),
+        skills=doc.get("skills", []),
+        education=doc.get("education", ""),
+        experience=_clean_experience(doc.get("experience", [])),
     )
 
 
