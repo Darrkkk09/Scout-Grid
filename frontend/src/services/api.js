@@ -39,17 +39,31 @@ export const fetchCandidateById = async (candidateId) => {
 };
 
 /**
- * Search candidates using natural language query & filters
- * POST /search
+ * Search candidates using natural language query & filters via OpenSearch Hybrid & Ranking
+ * POST /search/opensearch?rank=true
  */
 export const searchCandidates = async ({ query, page = 1, limit = 20, filters = {} }) => {
-  const response = await apiClient.post('/search', {
+  const response = await apiClient.post('/search/opensearch?rank=true', {
     query,
     page,
     limit,
     filters,
   });
   return response.data;
+};
+
+/**
+ * Fetch dashboard analytics overview metrics
+ * GET /analytics/dashboard
+ */
+export const fetchDashboardAnalytics = async () => {
+  try {
+    const response = await apiClient.get('/analytics/dashboard');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching dashboard analytics:', error);
+    return null;
+  }
 };
 
 /**

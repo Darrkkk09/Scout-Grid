@@ -38,6 +38,10 @@ class SearchRequest(BaseModel):
         default=None,
         description="Opaque base64 encoded cursor token for cursor pagination"
     )
+    rank: bool = Field(
+        default=False,
+        description="Enable candidate feature ranking on retrieved candidate pool"
+    )
 
 
 class SearchResponse(BaseModel):

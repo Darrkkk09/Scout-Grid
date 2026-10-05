@@ -52,10 +52,12 @@ async def search_candidates_opensearch(
     page: Optional[int] = Query(None, ge=1),
     limit: Optional[int] = Query(None, ge=1, le=100),
     search_mode: str = Query("hybrid", description="Search mode: 'hybrid' (default), 'bm25', or 'vector'"),
+    rank: bool = Query(False, description="Enable candidate feature ranking"),
     client: OpenSearch = Depends(get_opensearch_client),
 ) -> SearchResponse:
     effective_page = page if page is not None else request.page
     effective_limit = limit if limit is not None else request.limit
+    effective_rank = rank or request.rank
 
     service = OpenSearchService(client)
     return await service.search(
@@ -64,6 +66,7 @@ async def search_candidates_opensearch(
         limit=effective_limit,
         filters=request.filters,
         search_mode=search_mode,
+        rank=effective_rank,
     )
 
 

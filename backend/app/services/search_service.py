@@ -133,10 +133,14 @@ class SearchService:
 
         # 4. Job title matching across work history title or education
         if requirements.job_title:
-            title_regex = re.escape(requirements.job_title)
+            tokens = [re.escape(w) for w in re.findall(r"\w+", requirements.job_title) if len(w) > 2]
+            if tokens:
+                pattern = "".join(f"(?=.*{t})" for t in tokens)
+            else:
+                pattern = re.escape(requirements.job_title)
             mongo_filter["$or"] = [
-                {"experience.title": {"$regex": title_regex, "$options": "i"}},
-                {"education": {"$regex": title_regex, "$options": "i"}},
+                {"experience.title": {"$regex": pattern, "$options": "i"}},
+                {"education": {"$regex": pattern, "$options": "i"}},
             ]
 
         return mongo_filter

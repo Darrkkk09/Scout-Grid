@@ -43,8 +43,12 @@ MONGODB_DATABASE = os.getenv("MONGODB_DATABASE", "scoutgrid")
 
 
 def bulk_index_candidate_embeddings(
-    limit: int = 31002, batch_size: int = 1000
-) -> Tuple[int, int, int, int, float, float]:
+    limit: int = 100000,
+    batch_size: int = 1000,
+    index_name: str = "scoutgrid_candidates_100k",
+    resume: bool = True,
+    reset_index: bool = False,
+) -> Tuple[int, int, int, int, float, float, int]:
     t0 = time.perf_counter()
 
     print(f"Connecting to MongoDB database '{MONGODB_DATABASE}' at {MONGODB_URI}...")
@@ -52,25 +56,49 @@ def bulk_index_candidate_embeddings(
     db = mongo_client[MONGODB_DATABASE]
     collection = db["candidates"]
 
-    try:
-        total_candidates_in_db = int(collection.count_documents({}))
-    except (TypeError, ValueError):
-        total_candidates_in_db = limit
-
+    total_candidates_in_db = int(collection.count_documents({}))
     target_limit = min(limit, total_candidates_in_db) if limit > 0 else total_candidates_in_db
-
-    print(
-        f"Total candidates in MongoDB: {total_candidates_in_db:,}. Targeting index batch limit: {target_limit:,}."
-    )
 
     print("Connecting to OpenSearch...")
     os_client = create_opensearch_client()
-    create_candidate_index(os_client, CANDIDATES_INDEX_NAME)
+
+    if reset_index and os_client.indices.exists(index=index_name):
+        print(f"Resetting target OpenSearch index '{index_name}'...")
+        os_client.indices.delete(index=index_name)
+        print(f"Deleted OpenSearch index '{index_name}'.")
+
+    create_candidate_index(os_client, index_name)
 
     embedding_service = EmbeddingService()
-    print(
-        f"Embedding Provider: {embedding_service.provider} | Model: {embedding_service.model} | Dimension: {embedding_service.dimension}"
-    )
+
+    print("=" * 60)
+    print("SCOUTGRID 100K OPENSEARCH INDEXING")
+    print("=" * 60)
+    print(f"MongoDB candidates: {total_candidates_in_db:,}")
+    print(f"OpenSearch index:   {index_name}")
+    print(f"Batch size:         {batch_size:,}")
+    print(f"Resumable indexing: {resume}")
+    print(f"Embedding provider: {embedding_service.provider}")
+    print(f"Embedding model:    {embedding_service.model}")
+    print(f"Embedding dimension:{embedding_service.dimension}")
+    print("\nProgress:\n")
+
+    already_indexed_ids = set()
+    if resume and os_client.indices.exists(index=index_name):
+        # Scan existing document IDs to allow resumption without re-indexing
+        print("  Checking existing document IDs for resumable indexing...")
+        try:
+            res = helpers.scan(
+                os_client,
+                index=index_name,
+                query={"_source": False, "query": {"match_all": {}}},
+                scroll="5m",
+            )
+            for hit in res:
+                already_indexed_ids.add(hit["_id"])
+            print(f"  Found {len(already_indexed_ids):,} candidates already in '{index_name}'.")
+        except Exception as e:
+            print(f"  Warning during resume check: {str(e)}")
 
     total_read = 0
     embeddings_generated = 0
@@ -81,25 +109,30 @@ def bulk_index_candidate_embeddings(
 
     batch_docs = []
     for doc in cursor:
-        batch_docs.append(doc)
         total_read += 1
+        cand_id = str(doc.get("_id", doc.get("id")))
+
+        if resume and cand_id in already_indexed_ids:
+            continue
+
+        batch_docs.append(doc)
 
         if len(batch_docs) >= batch_size:
             success, failed, gen_count = _process_and_bulk_index_batch(
-                os_client, batch_docs, embedding_service
+                os_client, batch_docs, embedding_service, index_name
             )
             total_success += success
             total_failed += failed
             embeddings_generated += gen_count
-            print(
-                f"  Indexed batch: {total_success:,} / {target_limit:,} ({total_success/target_limit*100:.1f}%)"
-            )
+            
+            current_os_count = len(already_indexed_ids) + total_success
+            print(f"  {current_os_count:,} / {target_limit:,} candidates processed")
             batch_docs = []
 
     # Final batch flush
     if batch_docs:
         success, failed, gen_count = _process_and_bulk_index_batch(
-            os_client, batch_docs, embedding_service
+            os_client, batch_docs, embedding_service, index_name
         )
         total_success += success
         total_failed += failed
@@ -109,20 +142,30 @@ def bulk_index_candidate_embeddings(
     total_time = t1 - t0
     docs_per_sec = total_success / total_time if total_time > 0 else 0.0
 
+    final_os_count = os_client.count(index=index_name).get("count", 0)
+
+    print("\n" + "=" * 60)
+    print("INDEXING SUMMARY")
+    print("=" * 60)
+    print(f"MongoDB candidates:      {total_candidates_in_db:,}")
+    print(f"Indexed successfully:    {total_success:,}")
+    print(f"Failed:                  {total_failed:,}")
+    print(f"Execution time:          {total_time:.2f} seconds")
+    print(f"Throughput:              {docs_per_sec:.2f} candidates/sec")
+    print(f"OpenSearch total count:  {final_os_count:,}")
+    print("=" * 60 + "\n")
+
     mongo_client.close()
-    return total_read, embeddings_generated, total_success, total_failed, total_time, docs_per_sec
+    return total_read, embeddings_generated, total_success, total_failed, total_time, docs_per_sec, final_os_count
 
 
 def _process_and_bulk_index_batch(
-    os_client, batch_docs: list, embedding_service: EmbeddingService
+    os_client, batch_docs: list, embedding_service: EmbeddingService, index_name: str
 ) -> Tuple[int, int, int]:
     actions = []
     embeddings_generated = 0
 
-    # Generate semantic texts for batch
     semantic_texts = [candidate_to_semantic_text(doc) for doc in batch_docs]
-
-    # Generate batch embeddings
     vectors = embedding_service.embed_texts(semantic_texts)
 
     for doc, vec in zip(batch_docs, vectors):
@@ -133,7 +176,7 @@ def _process_and_bulk_index_batch(
 
             actions.append(
                 {
-                    "_index": CANDIDATES_INDEX_NAME,
+                    "_index": index_name,
                     "_id": candidate_id,
                     "_source": transformed,
                 }
@@ -158,29 +201,35 @@ def _process_and_bulk_index_batch(
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Generate candidate embeddings and bulk index into OpenSearch"
+        description="Generate candidate embeddings and bulk index into OpenSearch safely"
     )
     parser.add_argument(
-        "--limit", type=int, default=31002, help="Maximum number of candidates to process"
+        "--index",
+        type=str,
+        default=os.getenv("OPENSEARCH_INDEX_NAME", "scoutgrid_candidates_100k"),
+        help="Target OpenSearch index name (default: scoutgrid_candidates_100k)",
+    )
+    parser.add_argument(
+        "--limit", type=int, default=100000, help="Maximum number of candidates to process"
     )
     parser.add_argument(
         "--batch-size", type=int, default=1000, help="Batch size for embeddings & OpenSearch bulk API"
     )
+    parser.add_argument(
+        "--resume", action="store_true", default=True, help="Enable resumable indexing (skip already indexed IDs)"
+    )
+    parser.add_argument(
+        "--reset-index", action="store_true", help="Delete and recreate target index before indexing"
+    )
     args = parser.parse_args()
 
-    read, generated, success, failed, total_time, throughput = bulk_index_candidate_embeddings(
-        limit=args.limit, batch_size=args.batch_size
+    bulk_index_candidate_embeddings(
+        limit=args.limit,
+        batch_size=args.batch_size,
+        index_name=args.index,
+        resume=args.resume,
+        reset_index=args.reset_index,
     )
-
-    print("\n=======================================================")
-    print("Candidate Embedding & Bulk Indexing Results:")
-    print(f"  Candidates read from MongoDB: {read:,}")
-    print(f"  Embeddings generated:         {generated:,}")
-    print(f"  Successfully indexed:         {success:,}")
-    print(f"  Failed:                       {failed:,}")
-    print(f"  Total processing time:        {total_time:.2f} seconds")
-    print(f"  Throughput:                   {throughput:.2f} candidates/sec")
-    print("=======================================================")
 
 
 if __name__ == "__main__":

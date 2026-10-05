@@ -11,9 +11,11 @@ from app.models.search import (
     SearchRequest,
     SearchResponse,
 )
+from app.services.cache_service import CacheService
 from app.services.embedding_service import EmbeddingService
 from app.services.hybrid_requirement_extractor import HybridRequirementExtractor
 from app.services.opensearch_index import CANDIDATES_INDEX_NAME
+from app.services.ranking_service import CandidateRankingService
 from app.services.requirement_extractor import RequirementExtractor
 
 logger = logging.getLogger(__name__)
@@ -70,10 +72,12 @@ class OpenSearchService:
         client: OpenSearch,
         index_name: str = CANDIDATES_INDEX_NAME,
         embedding_service: Optional[EmbeddingService] = None,
+        cache_service: Optional[CacheService] = None,
     ):
         self.client = client
         self.index_name = index_name
         self.embedding_service = embedding_service or EmbeddingService()
+        self.cache_service = cache_service or CacheService()
 
         # Hybrid search configuration
         self.rrf_k = int(os.getenv("HYBRID_RRF_K", "60"))
@@ -218,13 +222,50 @@ class OpenSearchService:
         limit: int = 20,
         filters: Optional[Dict[str, Any]] = None,
         search_mode: str = "hybrid",
+        rank: bool = False,
     ) -> SearchResponse:
         """
-        Main search entry point supporting search_mode in ('bm25', 'vector', 'hybrid').
-        Defaults to 'hybrid' with fallback resilience.
+        Main search entry point supporting search_mode in ('bm25', 'vector', 'hybrid'),
+        candidate feature ranking when rank=True, and Redis search & agent response caching.
         """
-        requirements = HybridRequirementExtractor().extract(query)
+        # 1. Search Result Cache Check
+        search_params = {
+            "query": (query or "").strip().lower(),
+            "page": page,
+            "limit": limit,
+            "filters": filters or {},
+            "search_mode": search_mode,
+            "rank": rank,
+            "index_name": self.index_name,
+        }
+        search_cache_key = self.cache_service.make_search_key(search_params)
+        cached_search_data = await self.cache_service.get(search_cache_key)
+        if cached_search_data is not None:
+            return SearchResponse(**cached_search_data)
+
+        # 2. Agent Requirement Extraction Cache Check
+        agent_cache_key = self.cache_service.make_agent_key(query or "")
+        cached_reqs_data = await self.cache_service.get(agent_cache_key)
+        if cached_reqs_data is not None:
+            requirements = ParsedRequirements(**cached_reqs_data)
+        else:
+            requirements = HybridRequirementExtractor().extract(query)
+            await self.cache_service.set(
+                agent_cache_key,
+                requirements.model_dump(mode="json"),
+                ttl=self.cache_service.agent_ttl,
+            )
+
         from_offset = (page - 1) * limit
+
+        # If ranking is enabled, expand retrieval candidate pool limit
+        if rank:
+            pool_limit = max(limit * 5, int(os.getenv("RANKING_CANDIDATE_LIMIT", "200")))
+            fetch_limit = pool_limit
+            fetch_from = 0
+        else:
+            fetch_limit = limit
+            fetch_from = from_offset
 
         bm25_hits: List[Dict[str, Any]] = []
         vector_hits: List[Dict[str, Any]] = []
@@ -236,8 +277,8 @@ class OpenSearchService:
             opensearch_query = self.build_opensearch_query(requirements, filters)
             body = {
                 "query": opensearch_query,
-                "from": from_offset,
-                "size": limit,
+                "from": fetch_from,
+                "size": fetch_limit,
                 "sort": [{"candidate_id": {"order": "asc"}}],
                 "track_total_hits": True,
             }
@@ -248,13 +289,13 @@ class OpenSearchService:
             final_hits = hits_data.get("hits", [])
 
         elif search_mode == "vector":
-            vector_hits = self.search_vector(query, requirements, filters, limit=limit)
+            vector_hits = self.search_vector(query, requirements, filters, limit=fetch_limit)
             total = len(vector_hits)
             final_hits = vector_hits
 
         else:
             # Default HYBRID Mode: BM25 + Vector + RRF Fusion with Fallback Resilience
-            retrieve_limit = limit * self.candidate_multiplier
+            retrieve_limit = fetch_limit if rank else (limit * self.candidate_multiplier)
 
             # 1. Fetch BM25 Candidate Batch
             try:
@@ -286,49 +327,66 @@ class OpenSearchService:
                 fused = reciprocal_rank_fusion(
                     bm25_hits, vector_hits, rrf_k=self.rrf_k, top_k=retrieve_limit
                 )
-                final_hits = fused[from_offset : from_offset + limit]
+                final_hits = fused if rank else fused[from_offset : from_offset + limit]
             elif bm25_hits:
-                # Vector failure fallback -> BM25 only
-                logger.info("Hybrid search falling back to BM25-only (vector phase empty or failed)")
-                final_hits = bm25_hits[from_offset : from_offset + limit]
+                logger.info("Hybrid search falling back to BM25-only")
+                final_hits = bm25_hits if rank else bm25_hits[from_offset : from_offset + limit]
             elif vector_hits:
-                # BM25 failure fallback -> Vector only
-                logger.info("Hybrid search falling back to Vector-only (BM25 phase empty or failed)")
-                final_hits = vector_hits[from_offset : from_offset + limit]
+                logger.info("Hybrid search falling back to Vector-only")
+                final_hits = vector_hits if rank else vector_hits[from_offset : from_offset + limit]
                 total = len(vector_hits)
             else:
                 final_hits = []
 
         pages = math.ceil(total / limit) if total > 0 else 0
 
-        candidates: List[CandidateResponse] = []
-        for hit in final_hits:
-            source = hit.get("_source", {})
-            candidate_id = source.get("candidate_id", hit.get("_id"))
+        # Apply Ranking Layer if requested
+        if rank and final_hits:
+            ranking_service = CandidateRankingService()
+            ranked_candidates = ranking_service.rank_candidates(
+                hits=final_hits,
+                requirements=requirements,
+                top_k=limit,
+            )
+            candidates = [rc.candidate for rc in ranked_candidates]
+        else:
+            candidates: List[CandidateResponse] = []
+            for hit in final_hits:
+                source = hit.get("_source", {})
+                candidate_id = source.get("candidate_id", hit.get("_id"))
 
-            exp_raw = source.get("experience", [])
-            cleaned_exp = []
-            if isinstance(exp_raw, list):
-                for item in exp_raw:
-                    if isinstance(item, dict) and item.get("company") and item.get("title"):
-                        exp_item = dict(item)
-                        if not exp_item.get("start_date"):
-                            exp_item["start_date"] = "2020-01-01"
-                        cleaned_exp.append(exp_item)
+                exp_raw = source.get("experience", [])
+                cleaned_exp = []
+                if isinstance(exp_raw, list):
+                    for item in exp_raw:
+                        if isinstance(item, dict) and item.get("company") and item.get("title"):
+                            exp_item = dict(item)
+                            sd = str(exp_item.get("start_date", ""))
+                            if sd and (" " in sd or "T" in sd):
+                                exp_item["start_date"] = sd.split(" ")[0].split("T")[0]
+                            elif not sd:
+                                exp_item["start_date"] = "2020-01-01"
 
-            cand_dict = {
-                "id": str(candidate_id),
-                "name": source.get("name", ""),
-                "email": source.get("email", ""),
-                "location": source.get("location", ""),
-                "experience_years": source.get("experience_years", 0.0),
-                "skills": source.get("skills", []),
-                "education": source.get("education", ""),
-                "experience": cleaned_exp,
-            }
-            candidates.append(CandidateResponse(**cand_dict))
+                            ed = str(exp_item.get("end_date", ""))
+                            if ed and (" " in ed or "T" in ed):
+                                exp_item["end_date"] = ed.split(" ")[0].split("T")[0]
+                            elif not ed or ed.lower() == "none":
+                                exp_item["end_date"] = None
+                            cleaned_exp.append(exp_item)
 
-        return SearchResponse(
+                cand_dict = {
+                    "id": str(candidate_id),
+                    "name": source.get("name", ""),
+                    "email": source.get("email", ""),
+                    "location": source.get("location", ""),
+                    "experience_years": source.get("experience_years", 0.0),
+                    "skills": source.get("skills", []),
+                    "education": source.get("education", ""),
+                    "experience": cleaned_exp,
+                }
+                candidates.append(CandidateResponse(**cand_dict))
+
+        response = SearchResponse(
             query=query,
             parsed_requirements=requirements,
             results=candidates,
@@ -338,3 +396,12 @@ class OpenSearchService:
             page=page,
             pages=pages,
         )
+
+        # 4. Store Search Result in Redis Cache
+        await self.cache_service.set(
+            search_cache_key,
+            response.model_dump(mode="json"),
+            ttl=self.cache_service.search_ttl,
+        )
+
+        return response

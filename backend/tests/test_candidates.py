@@ -13,7 +13,7 @@ import pytest
 import pytest_asyncio
 
 os.environ.setdefault("MONGODB_URI", "mongodb://localhost:27017")
-os.environ.setdefault("MONGODB_DATABASE", "scoutgrid_test")
+os.environ["MONGODB_DATABASE"] = "scoutgrid_test"
 
 from httpx import AsyncClient, ASGITransport
 from app.main import app

@@ -31,6 +31,8 @@ class CandidateResponse(BaseModel):
     skills: list[str]
     education: str
     experience: list[ExperienceEntry]
+    match_score: Optional[float] = None
+    match_reasons: Optional[list[str]] = None
 
 
 class PaginatedCandidates(BaseModel):

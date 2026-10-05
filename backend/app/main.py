@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import connect_to_mongo, close_mongo_connection
-from app.routes import candidates, search
+from app.routes import analytics, candidates, search
 
 
 @asynccontextmanager
@@ -39,6 +39,7 @@ app.add_middleware(
 
 app.include_router(candidates.router, prefix="/candidates", tags=["candidates"])
 app.include_router(search.router, prefix="/search", tags=["search"])
+app.include_router(analytics.router, prefix="/analytics", tags=["analytics"])
 
 
 

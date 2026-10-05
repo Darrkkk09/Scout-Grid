@@ -6,11 +6,12 @@ from pymongo import ASCENDING, IndexModel
 
 logger = logging.getLogger(__name__)
 
-MONGODB_URI = os.environ.get("MONGODB_URI", "mongodb://localhost:27017")
-MONGODB_DATABASE = os.environ.get("MONGODB_DATABASE", "scoutgrid")
-
 _client: motor.motor_asyncio.AsyncIOMotorClient | None = None
 _db: motor.motor_asyncio.AsyncIOMotorDatabase | None = None
+
+
+def get_database_name() -> str:
+    return os.environ.get("MONGODB_DATABASE", "scoutgrid")
 
 
 def get_db() -> motor.motor_asyncio.AsyncIOMotorDatabase:
@@ -20,12 +21,13 @@ def get_db() -> motor.motor_asyncio.AsyncIOMotorDatabase:
     except RuntimeError:
         current_loop = None
 
-    # Re-initialize client if missing or if running in a different event loop
-    if _client is None or getattr(_client, 'io_loop', None) != current_loop:
-        _client = motor.motor_asyncio.AsyncIOMotorClient(MONGODB_URI)
-        _db = _client[MONGODB_DATABASE]
+    uri = os.environ.get("MONGODB_URI", "mongodb://localhost:27017")
+    db_name = get_database_name()
 
-    return _db
+    if _client is None or getattr(_client, 'io_loop', None) != current_loop:
+        _client = motor.motor_asyncio.AsyncIOMotorClient(uri)
+
+    return _client[db_name]
 
 
 def get_candidates_collection() -> motor.motor_asyncio.AsyncIOMotorCollection:
@@ -35,13 +37,15 @@ def get_candidates_collection() -> motor.motor_asyncio.AsyncIOMotorCollection:
 async def connect_to_mongo() -> None:
     global _client, _db
 
-    logger.info("Connecting to MongoDB at %s", MONGODB_URI)
+    uri = os.environ.get("MONGODB_URI", "mongodb://localhost:27017")
+    db_name = get_database_name()
+    logger.info("Connecting to MongoDB at %s / database '%s'", uri, db_name)
     db = get_db()
     _client = db.client
 
     # Verify connectivity
     await _client.admin.command("ping")
-    logger.info("Connected to MongoDB database '%s'", MONGODB_DATABASE)
+    logger.info("Connected to MongoDB database '%s'", db_name)
 
     await _create_indexes()
 

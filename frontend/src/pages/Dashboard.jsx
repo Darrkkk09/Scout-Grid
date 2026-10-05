@@ -15,24 +15,33 @@ import {
   Briefcase
 } from 'lucide-react';
 import { Button } from '../components/ui/Button';
-import { checkHealth } from '../services/api';
+import { checkHealth, fetchDashboardAnalytics } from '../services/api';
 
 export const Dashboard = () => {
   const navigate = useNavigate();
   const [backendStatus, setBackendStatus] = useState('checking');
+  const [totalCandidates, setTotalCandidates] = useState(null);
 
   useEffect(() => {
     checkHealth()
       .then((res) => setBackendStatus(res.status === 'ok' ? 'online' : 'offline'))
       .catch(() => setBackendStatus('offline'));
+
+    fetchDashboardAnalytics()
+      .then((data) => {
+        if (data && typeof data.total_candidates === 'number') {
+          setTotalCandidates(data.total_candidates);
+        }
+      })
+      .catch((err) => console.error('Failed to load analytics:', err));
   }, []);
 
-  // Structured metrics state ready for future API binding
+  // Structured metrics state
   const metrics = [
     {
-      id: 'candidates_sourced',
-      label: 'Candidates sourced',
-      value: '12,482',
+      id: 'total_candidates',
+      label: 'Total Candidates',
+      value: totalCandidates !== null ? totalCandidates.toLocaleString() : '...',
       change: '+14% from last month',
       icon: Users,
       color: 'text-brand-600',

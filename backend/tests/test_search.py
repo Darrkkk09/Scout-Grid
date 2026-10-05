@@ -4,7 +4,7 @@ import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 
 os.environ.setdefault("MONGODB_URI", "mongodb://localhost:27017")
-os.environ.setdefault("MONGODB_DATABASE", "scoutgrid_test")
+os.environ["MONGODB_DATABASE"] = "scoutgrid_test"
 os.environ["GEMINI_API_KEY_1"] = ""
 os.environ["GEMINI_API_KEY_2"] = ""
 os.environ["GEMINI_API_KEY_3"] = ""
