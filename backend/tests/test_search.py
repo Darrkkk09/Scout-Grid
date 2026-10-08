@@ -14,10 +14,10 @@ os.environ["GEMINI_API_KEYS"] = ""
 os.environ["GEMINI_API_KEY"] = ""
 os.environ["LLM_API_KEY"] = ""
 
-from app.database import get_db
-from app.main import app
-from app.services.requirement_extractor import RequirementExtractor
-from app.services.search_service import SearchService
+from database import get_db
+from main import app
+from services.requirement_extractor import RequirementExtractor
+from services.search_service import SearchService
 
 
 # ---------------------------------------------------------------------------

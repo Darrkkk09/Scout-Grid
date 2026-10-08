@@ -4,10 +4,10 @@ import urllib.request
 from unittest.mock import MagicMock, patch
 import pytest
 
-from app.models.search import ParsedRequirements
-from app.services.hybrid_requirement_extractor import HybridRequirementExtractor
-from app.services.llm_requirement_extractor import LLMRequirementExtractor
-from app.services.requirement_validator import RequirementValidator
+from models.search import ParsedRequirements
+from services.hybrid_requirement_extractor import HybridRequirementExtractor
+from services.llm_requirement_extractor import LLMRequirementExtractor
+from services.requirement_validator import RequirementValidator
 
 
 # 1. Validator Tests

@@ -1,6 +1,6 @@
 import pytest
-from app.services.embedding_service import EmbeddingService, candidate_to_semantic_text
-from app.services.opensearch_search_service import reciprocal_rank_fusion
+from services.embedding_service import EmbeddingService, candidate_to_semantic_text
+from services.opensearch_search_service import reciprocal_rank_fusion
 
 
 # 1. Semantic Text Generation Test

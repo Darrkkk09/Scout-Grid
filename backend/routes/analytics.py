@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from motor.motor_asyncio import AsyncIOMotorCollection
 from pydantic import BaseModel
 
-from app.database import get_candidates_collection
+from database import get_candidates_collection
 
 router = APIRouter()
 

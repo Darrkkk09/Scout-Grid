@@ -1,9 +1,9 @@
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
-from app.models.candidate import CandidateResponse
-from app.models.search import ParsedRequirements, SearchResponse
-from app.services.cache_service import CacheService
-from app.services.opensearch_search_service import OpenSearchService
+from models.candidate import CandidateResponse
+from models.search import ParsedRequirements, SearchResponse
+from services.cache_service import CacheService
+from services.opensearch_search_service import OpenSearchService
 
 
 @pytest.fixture

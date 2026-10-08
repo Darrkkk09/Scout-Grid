@@ -8,10 +8,10 @@ from typing import Any, Dict, List
 backend_path = os.path.join(os.path.dirname(__file__), "..", "backend")
 sys.path.insert(0, os.path.abspath(backend_path))
 
-from app.database import connect_to_mongo, close_mongo_connection, get_candidates_collection
-from app.services.opensearch_client import get_opensearch_client
-from app.services.search_service import SearchService
-from app.services.opensearch_search_service import OpenSearchService
+from database import connect_to_mongo, close_mongo_connection, get_candidates_collection
+from services.opensearch_client import get_opensearch_client
+from services.search_service import SearchService
+from services.opensearch_search_service import OpenSearchService
 
 TEST_QUERIES = [
     "Python developers",

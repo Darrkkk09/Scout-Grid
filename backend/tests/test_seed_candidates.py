@@ -17,7 +17,7 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "backend"))
 
-from app.models.candidate import CandidateCreate
+from models.candidate import CandidateCreate
 from scripts.seed_candidates import (
     ALL_TECHNOLOGY_CATALOGUE,
     PERSONA_ARCHETYPES,

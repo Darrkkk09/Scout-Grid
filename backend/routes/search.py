@@ -3,11 +3,11 @@ from fastapi import APIRouter, Depends, Query, status
 from motor.motor_asyncio import AsyncIOMotorCollection
 from opensearchpy import OpenSearch
 
-from app.database import get_candidates_collection
-from app.models.search import SearchRequest, SearchResponse
-from app.services.opensearch_client import get_opensearch_client
-from app.services.opensearch_search_service import OpenSearchService
-from app.services.search_service import SearchService
+from database import get_candidates_collection
+from models.search import SearchRequest, SearchResponse
+from services.opensearch_client import get_opensearch_client
+from services.opensearch_search_service import OpenSearchService
+from services.search_service import SearchService
 
 router = APIRouter()
 

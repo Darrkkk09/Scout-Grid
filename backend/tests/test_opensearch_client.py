@@ -2,7 +2,7 @@ import os
 import pytest
 from unittest.mock import MagicMock, patch
 
-from app.services.opensearch_client import create_opensearch_client, get_opensearch_client
+from services.opensearch_client import create_opensearch_client, get_opensearch_client
 
 
 def test_create_opensearch_client_from_env(monkeypatch):
@@ -13,7 +13,7 @@ def test_create_opensearch_client_from_env(monkeypatch):
     monkeypatch.setenv("OPENSEARCH_PASSWORD", "secret_pass")
     monkeypatch.delenv("OPENSEARCH_SERVICE_URI", raising=False)
 
-    with patch("app.services.opensearch_client.OpenSearch") as MockOpenSearch:
+    with patch("services.opensearch_client.OpenSearch") as MockOpenSearch:
         client_mock = MagicMock()
         MockOpenSearch.return_value = client_mock
 
@@ -31,7 +31,7 @@ def test_create_opensearch_client_from_service_uri(monkeypatch):
     """Verify OpenSearch client supports OPENSEARCH_SERVICE_URI configuration."""
     monkeypatch.setenv("OPENSEARCH_SERVICE_URI", "https://admin:pass@mock-host:22764")
 
-    with patch("app.services.opensearch_client.OpenSearch") as MockOpenSearch:
+    with patch("services.opensearch_client.OpenSearch") as MockOpenSearch:
         create_opensearch_client()
         MockOpenSearch.assert_called_once()
         _, kwargs = MockOpenSearch.call_args

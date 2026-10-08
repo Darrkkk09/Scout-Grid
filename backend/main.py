@@ -1,18 +1,16 @@
 from contextlib import asynccontextmanager
-
 from fastapi import FastAPI
-
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.database import connect_to_mongo, close_mongo_connection
-from app.routes import analytics, candidates, search
+from database import connect_to_mongo, close_mongo_connection
+from routes import agents, analytics, candidates, search
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await connect_to_mongo()
     import logging
-    from app.services.llm_requirement_extractor import LLMRequirementExtractor
+    from services.llm_requirement_extractor import LLMRequirementExtractor
     extractor = LLMRequirementExtractor()
     if not extractor.is_configured():
         logging.getLogger(__name__).warning(
@@ -40,7 +38,7 @@ app.add_middleware(
 app.include_router(candidates.router, prefix="/candidates", tags=["candidates"])
 app.include_router(search.router, prefix="/search", tags=["search"])
 app.include_router(analytics.router, prefix="/analytics", tags=["analytics"])
-
+app.include_router(agents.router)
 
 
 @app.get("/", tags=["root"])

@@ -8,6 +8,7 @@ logger = logging.getLogger(__name__)
 
 _client: motor.motor_asyncio.AsyncIOMotorClient | None = None
 _db: motor.motor_asyncio.AsyncIOMotorDatabase | None = None
+_client_loop: asyncio.AbstractEventLoop | None = None
 
 
 def get_database_name() -> str:
@@ -15,7 +16,8 @@ def get_database_name() -> str:
 
 
 def get_db() -> motor.motor_asyncio.AsyncIOMotorDatabase:
-    global _client, _db
+    global _client, _db, _client_loop
+
     try:
         current_loop = asyncio.get_running_loop()
     except RuntimeError:
@@ -24,8 +26,9 @@ def get_db() -> motor.motor_asyncio.AsyncIOMotorDatabase:
     uri = os.environ.get("MONGODB_URI", "mongodb://localhost:27017")
     db_name = get_database_name()
 
-    if _client is None or getattr(_client, 'io_loop', None) != current_loop:
+    if _client is None or (current_loop is not None and _client_loop != current_loop):
         _client = motor.motor_asyncio.AsyncIOMotorClient(uri)
+        _client_loop = current_loop
 
     return _client[db_name]
 
@@ -35,13 +38,14 @@ def get_candidates_collection() -> motor.motor_asyncio.AsyncIOMotorCollection:
 
 
 async def connect_to_mongo() -> None:
-    global _client, _db
+    global _client, _db, _client_loop
 
     uri = os.environ.get("MONGODB_URI", "mongodb://localhost:27017")
     db_name = get_database_name()
     logger.info("Connecting to MongoDB at %s / database '%s'", uri, db_name)
     db = get_db()
     _client = db.client
+    _client_loop = asyncio.get_running_loop()
 
     # Verify connectivity
     await _client.admin.command("ping")
@@ -51,12 +55,13 @@ async def connect_to_mongo() -> None:
 
 
 async def close_mongo_connection() -> None:
-    global _client, _db
+    global _client, _db, _client_loop
 
     if _client is not None:
         _client.close()
         _client = None
         _db = None
+        _client_loop = None
         logger.info("MongoDB connection closed.")
 
 
@@ -73,4 +78,3 @@ async def _create_indexes() -> None:
 
     await collection.create_indexes(indexes)
     logger.info("MongoDB indexes ensured.")
-

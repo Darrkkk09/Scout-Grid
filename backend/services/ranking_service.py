@@ -4,8 +4,8 @@ import logging
 from typing import Any, Dict, List, Optional, Tuple
 from pydantic import BaseModel
 
-from app.models.candidate import CandidateResponse
-from app.models.search import ParsedRequirements
+from models.candidate import CandidateResponse
+from models.search import ParsedRequirements
 
 logger = logging.getLogger(__name__)
 

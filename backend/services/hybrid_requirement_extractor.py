@@ -2,9 +2,9 @@ import logging
 import time
 from typing import Any, Dict, Optional, Tuple
 
-from app.models.search import ParsedRequirements
-from app.services.llm_requirement_extractor import LLMRequirementExtractor
-from app.services.requirement_extractor import RequirementExtractor
+from models.search import ParsedRequirements
+from services.llm_requirement_extractor import LLMRequirementExtractor
+from services.requirement_extractor import RequirementExtractor
 
 logger = logging.getLogger(__name__)
 

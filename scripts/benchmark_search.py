@@ -32,9 +32,9 @@ if PROJECT_ROOT not in sys.path:
 
 load_dotenv(os.path.join(PROJECT_ROOT, ".env"))
 
-from app.models.search import ParsedRequirements
-from app.services.requirement_extractor import RequirementExtractor
-from app.services.search_service import SearchService
+from models.search import ParsedRequirements
+from services.requirement_extractor import RequirementExtractor
+from services.search_service import SearchService
 from scripts.generate_candidates import generate_candidate
 
 MONGODB_URI = os.environ.get("MONGODB_URI", "mongodb://localhost:27017")

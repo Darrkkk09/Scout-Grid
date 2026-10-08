@@ -2,8 +2,8 @@ from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Query
 
-from app.models.candidate import CandidateCreate, CandidateResponse, PaginatedCandidates
-from app.services import candidate_service
+from models.candidate import CandidateCreate, CandidateResponse, PaginatedCandidates
+from services import candidate_service
 
 router = APIRouter()
 

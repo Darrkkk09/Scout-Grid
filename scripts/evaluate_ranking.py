@@ -9,10 +9,10 @@ from typing import Dict, List, Any
 # Add backend directory to sys.path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "backend")))
 
-from app.services.opensearch_client import get_opensearch_client
-from app.services.opensearch_search_service import OpenSearchService, reciprocal_rank_fusion
-from app.services.requirement_extractor import RequirementExtractor
-from app.services.ranking_service import CandidateRankingService
+from services.opensearch_client import get_opensearch_client
+from services.opensearch_search_service import OpenSearchService, reciprocal_rank_fusion
+from services.requirement_extractor import RequirementExtractor
+from services.ranking_service import CandidateRankingService
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("evaluate_ranking")

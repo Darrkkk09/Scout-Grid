@@ -18,8 +18,8 @@ if BACKEND_DIR not in sys.path:
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
-from app.services.hybrid_requirement_extractor import HybridRequirementExtractor
-from app.services.requirement_extractor import RequirementExtractor
+from services.hybrid_requirement_extractor import HybridRequirementExtractor
+from services.requirement_extractor import RequirementExtractor
 
 TEST_QUERIES = [
     "Python developers",

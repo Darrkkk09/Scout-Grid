@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import MagicMock, patch
 from bson import ObjectId
 
-from app.services.opensearch_index import (
+from services.opensearch_index import (
     CANDIDATE_INDEX_MAPPING,
     CANDIDATES_INDEX_NAME,
     candidate_to_search_document,

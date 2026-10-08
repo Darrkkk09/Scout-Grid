@@ -25,7 +25,7 @@ from dotenv import load_dotenv
 load_dotenv(os.path.join(PROJECT_ROOT, ".env"))
 load_dotenv(os.path.join(BACKEND_DIR, ".env"))
 
-from app.services.opensearch_client import create_opensearch_client
+from services.opensearch_client import create_opensearch_client
 
 
 def main() -> None:

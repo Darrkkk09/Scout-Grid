@@ -8,15 +8,15 @@ from bson import ObjectId
 from fastapi import HTTPException, status
 from motor.motor_asyncio import AsyncIOMotorCollection
 
-from app.models.candidate import CandidateResponse
-from app.models.search import (
+from models.candidate import CandidateResponse
+from models.search import (
     PaginationMode,
     ParsedRequirements,
     SearchRequest,
     SearchResponse,
 )
-from app.services.hybrid_requirement_extractor import HybridRequirementExtractor
-from app.services.requirement_extractor import RequirementExtractor
+from services.hybrid_requirement_extractor import HybridRequirementExtractor
+from services.requirement_extractor import RequirementExtractor
 
 
 def encode_cursor(doc_id: str) -> str:

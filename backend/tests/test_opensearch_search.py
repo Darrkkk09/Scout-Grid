@@ -1,8 +1,8 @@
 from unittest.mock import MagicMock
 import pytest
 
-from app.models.search import ParsedRequirements
-from app.services.opensearch_search_service import OpenSearchService
+from models.search import ParsedRequirements
+from services.opensearch_search_service import OpenSearchService
 
 
 def test_build_opensearch_query_skills_and_location():

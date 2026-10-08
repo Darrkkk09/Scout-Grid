@@ -7,8 +7,8 @@ import urllib.error
 import urllib.request
 from typing import Any, Dict, List, Optional, Set, Tuple
 
-from app.models.search import ParsedRequirements
-from app.services.requirement_validator import RequirementValidator
+from models.search import ParsedRequirements
+from services.requirement_validator import RequirementValidator
 
 logger = logging.getLogger(__name__)
 

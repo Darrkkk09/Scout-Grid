@@ -1,6 +1,6 @@
 import re
 from typing import Dict, List, Optional, Tuple
-from app.models.search import ParsedRequirements
+from models.search import ParsedRequirements
 
 
 # Controlled Vocabulary based on candidate dataset & common tech domain

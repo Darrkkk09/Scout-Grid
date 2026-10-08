@@ -4,19 +4,19 @@ import os
 from typing import Any, Dict, List, Optional, Tuple
 from opensearchpy import OpenSearch
 
-from app.models.candidate import CandidateResponse
-from app.models.search import (
+from models.candidate import CandidateResponse
+from models.search import (
     PaginationMode,
     ParsedRequirements,
     SearchRequest,
     SearchResponse,
 )
-from app.services.cache_service import CacheService
-from app.services.embedding_service import EmbeddingService
-from app.services.hybrid_requirement_extractor import HybridRequirementExtractor
-from app.services.opensearch_index import CANDIDATES_INDEX_NAME
-from app.services.ranking_service import CandidateRankingService
-from app.services.requirement_extractor import RequirementExtractor
+from services.cache_service import CacheService
+from services.embedding_service import EmbeddingService
+from services.hybrid_requirement_extractor import HybridRequirementExtractor
+from services.opensearch_index import CANDIDATES_INDEX_NAME
+from services.ranking_service import CandidateRankingService
+from services.requirement_extractor import RequirementExtractor
 
 logger = logging.getLogger(__name__)
 

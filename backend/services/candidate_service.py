@@ -5,8 +5,8 @@ from bson import ObjectId
 from bson.errors import InvalidId
 from pymongo import ASCENDING
 
-from app.database import get_candidates_collection
-from app.models.candidate import CandidateCreate, CandidateResponse, PaginatedCandidates
+from database import get_candidates_collection
+from models.candidate import CandidateCreate, CandidateResponse, PaginatedCandidates
 
 
 from datetime import datetime, date

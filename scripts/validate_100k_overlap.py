@@ -10,10 +10,10 @@ if PROJECT_ROOT not in sys.path:
 if BACKEND_DIR not in sys.path:
     sys.path.insert(0, BACKEND_DIR)
 
-from app.database import connect_to_mongo, close_mongo_connection, get_candidates_collection
-from app.services.search_service import SearchService
-from app.services.opensearch_client import get_opensearch_client
-from app.services.opensearch_search_service import OpenSearchService
+from database import connect_to_mongo, close_mongo_connection, get_candidates_collection
+from services.search_service import SearchService
+from services.opensearch_client import get_opensearch_client
+from services.opensearch_search_service import OpenSearchService
 from scripts.benchmark_search import BENCHMARK_QUERIES
 
 async def validate_overlap():

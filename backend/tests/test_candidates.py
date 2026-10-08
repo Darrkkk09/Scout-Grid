@@ -16,8 +16,8 @@ os.environ.setdefault("MONGODB_URI", "mongodb://localhost:27017")
 os.environ["MONGODB_DATABASE"] = "scoutgrid_test"
 
 from httpx import AsyncClient, ASGITransport
-from app.main import app
-from app.database import get_db
+from main import app
+from database import get_db
 
 
 # ---------------------------------------------------------------------------

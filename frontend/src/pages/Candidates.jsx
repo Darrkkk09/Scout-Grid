@@ -13,8 +13,12 @@ import {
   Layers,
   ArrowRight,
   RefreshCw,
+  Cpu,
+  Bot,
+  UserCheck,
+  Send,
 } from 'lucide-react';
-import { searchCandidates, fetchCandidates } from '../services/api';
+import { searchCandidates, fetchCandidates, sourceCandidates } from '../services/api';
 import { CandidateCard } from '../components/candidates/CandidateCard';
 import { CandidateFilterToolbar } from '../components/candidates/CandidateFilterToolbar';
 import { CandidateCardSkeleton } from '../components/ui/Skeleton';
@@ -37,9 +41,12 @@ export const Candidates = () => {
   const initialLocation = searchParams.get('location') || '';
   const initialMinExp = searchParams.get('min_experience') || '';
   const initialPage = parseInt(searchParams.get('page') || '1', 10);
+  const initialUseMas = searchParams.get('mas') === 'true' || true; // Default to Multi-Agent Sourcing
 
   const [searchInput, setSearchInput] = useState(initialQuery);
   const [activeQuery, setActiveQuery] = useState(initialQuery);
+  const [useMas, setUseMas] = useState(initialUseMas);
+  const [outreachTone, setOutreachTone] = useState('professional');
 
   const [filters, setFilters] = useState({
     skill: initialSkill,
@@ -52,14 +59,16 @@ export const Candidates = () => {
 
   // Response & data state
   const [candidates, setCandidates] = useState([]);
+  const [expandedReqs, setExpandedReqs] = useState(null);
   const [parsedRequirements, setParsedRequirements] = useState(null);
   const [pagination, setPagination] = useState({ total: 0, pages: 1 });
   const [isLoading, setIsLoading] = useState(false);
+  const [masStep, setMasStep] = useState('');
   const [error, setError] = useState(null);
   const [hasSearched, setHasSearched] = useState(Boolean(initialQuery || initialSkill || initialLocation || initialMinExp));
 
   // Sync parameters to URL
-  const updateUrlParams = (queryVal, filterVals, pageVal) => {
+  const updateUrlParams = (queryVal, filterVals, pageVal, masVal) => {
     const params = new URLSearchParams();
     if (queryVal) params.set('q', queryVal);
     if (filterVals.skill) params.set('skill', filterVals.skill);
@@ -68,6 +77,7 @@ export const Candidates = () => {
       params.set('min_experience', filterVals.min_experience);
     }
     if (pageVal > 1) params.set('page', pageVal.toString());
+    if (masVal !== undefined) params.set('mas', masVal.toString());
 
     setSearchParams(params);
   };
@@ -76,27 +86,56 @@ export const Candidates = () => {
   const executeSearch = useCallback(async () => {
     setIsLoading(true);
     setError(null);
+    setExpandedReqs(null);
+    setParsedRequirements(null);
 
     try {
       if (activeQuery.trim()) {
-        const data = await searchCandidates({
-          query: activeQuery.trim(),
-          page,
-          limit,
-          filters: {
-            skill: filters.skill || undefined,
-            location: filters.location || undefined,
-            min_experience: filters.min_experience !== '' ? Number(filters.min_experience) : undefined,
-          },
-        });
+        if (useMas) {
+          // Multi-Agent System Sourcing Flow
+          setMasStep('Expanding technical requirements with QueryExpansionAgent...');
+          const data = await sourceCandidates({
+            query: activeQuery.trim(),
+            generateOutreach: true,
+            outreachTone,
+            topK: 20,
+          });
 
-        setCandidates(data.results || []);
-        setParsedRequirements(data.parsed_requirements || null);
-        setPagination({
-          total: data.total || 0,
-          pages: data.pages || 1,
-        });
-        setHasSearched(true);
+          setMasStep('Auditing candidate fits with CandidateVerifierAgent & OutreachAgent...');
+          setCandidates(data.candidates || []);
+          setExpandedReqs(data.expanded_requirements || null);
+          setParsedRequirements({
+            skills: data.expanded_requirements?.primary_skills || [],
+            location: data.expanded_requirements?.location,
+            min_experience: data.expanded_requirements?.min_experience,
+            job_title: data.expanded_requirements?.job_title,
+          });
+          setPagination({
+            total: data.total_found || (data.candidates ? data.candidates.length : 0),
+            pages: 1,
+          });
+          setHasSearched(true);
+        } else {
+          // OpenSearch Direct Hybrid Flow
+          const data = await searchCandidates({
+            query: activeQuery.trim(),
+            page,
+            limit,
+            filters: {
+              skill: filters.skill || undefined,
+              location: filters.location || undefined,
+              min_experience: filters.min_experience !== '' ? Number(filters.min_experience) : undefined,
+            },
+          });
+
+          setCandidates(data.results || []);
+          setParsedRequirements(data.parsed_requirements || null);
+          setPagination({
+            total: data.total || 0,
+            pages: data.pages || 1,
+          });
+          setHasSearched(true);
+        }
       } else if (filters.skill || filters.location || filters.min_experience !== '') {
         // Fallback to fetchCandidates if explicit filters are applied without query string
         const data = await fetchCandidates({
@@ -122,13 +161,14 @@ export const Candidates = () => {
         setHasSearched(false);
       }
     } catch (err) {
-      console.error('Error executing candidate search:', err);
-      setError('Unable to search candidates. Please check network connection and try again.');
+      console.error('Error executing candidate sourcing request:', err);
+      setError('Unable to complete the sourcing request. Please try again.');
       setCandidates([]);
     } finally {
       setIsLoading(false);
+      setMasStep('');
     }
-  }, [activeQuery, filters, page]);
+  }, [activeQuery, filters, page, useMas, outreachTone]);
 
   useEffect(() => {
     executeSearch();
@@ -140,21 +180,21 @@ export const Candidates = () => {
 
     setActiveQuery(searchInput.trim());
     setPage(1);
-    updateUrlParams(searchInput.trim(), filters, 1);
+    updateUrlParams(searchInput.trim(), filters, 1, useMas);
   };
 
   const handleExampleClick = (queryText) => {
     setSearchInput(queryText);
     setActiveQuery(queryText);
     setPage(1);
-    updateUrlParams(queryText, filters, 1);
+    updateUrlParams(queryText, filters, 1, useMas);
   };
 
   const handleFilterChange = (key, value) => {
     const updated = { ...filters, [key]: value };
     setFilters(updated);
     setPage(1);
-    updateUrlParams(activeQuery, updated, 1);
+    updateUrlParams(activeQuery, updated, 1, useMas);
   };
 
   const handleClearSearch = () => {
@@ -163,9 +203,10 @@ export const Candidates = () => {
     setActiveQuery('');
     setFilters(resetFilters);
     setParsedRequirements(null);
+    setExpandedReqs(null);
     setPage(1);
     setHasSearched(false);
-    updateUrlParams('', resetFilters, 1);
+    updateUrlParams('', resetFilters, 1, useMas);
   };
 
   return (
@@ -174,15 +215,15 @@ export const Candidates = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-surface-900 tracking-tight flex items-center gap-3">
-            <span>Find the right candidates</span>
+            <span>AI Multi-Agent Candidate Sourcing</span>
             {hasSearched && !isLoading && (
               <span className="text-xs font-semibold px-3 py-1 rounded-full bg-brand-50 text-brand-700 border border-brand-200/70">
-                {pagination.total.toLocaleString()} found
+                {pagination.total.toLocaleString()} candidates
               </span>
             )}
           </h1>
           <p className="text-xs text-surface-500 mt-1 font-medium">
-            AI-powered candidate sourcing and requirement extraction engine.
+            Powered by 4 Autonomous Agents: Query Expansion, Search Coordinator, Fit Auditor & Outreach Drafts.
           </p>
         </div>
 
@@ -193,8 +234,8 @@ export const Candidates = () => {
         )}
       </div>
 
-      {/* Prominent Search Bar UI */}
-      <div className="bg-white rounded-2xl border border-surface-200/90 p-4 shadow-card">
+      {/* Search Input & MAS Configuration Bar */}
+      <div className="bg-white rounded-2xl border border-surface-200/90 p-4 shadow-card space-y-3">
         <form onSubmit={handleSearchSubmit} className="relative">
           <div className="relative flex items-center">
             <Search className="w-5 h-5 text-surface-400 absolute left-4" />
@@ -202,7 +243,7 @@ export const Candidates = () => {
               type="text"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              placeholder="Describe the candidate you're looking for... e.g. Python backend engineers with 3+ years in Bangalore"
+              placeholder="Describe the candidate you're looking for... e.g. Python backend engineers in Bangalore with 3+ years"
               className="w-full pl-12 pr-36 py-3.5 text-sm bg-surface-50 border border-surface-200/90 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 text-surface-900 placeholder:text-surface-400 transition-all font-medium"
             />
             <Button
@@ -215,73 +256,105 @@ export const Candidates = () => {
               {isLoading ? (
                 <>
                   <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                  <span>Searching...</span>
+                  <span>Processing...</span>
                 </>
               ) : (
                 <>
                   <Sparkles className="w-3.5 h-3.5" />
-                  <span>Search</span>
+                  <span>Agent Source</span>
                 </>
               )}
             </Button>
           </div>
         </form>
 
-        {/* Display Extracted Criteria Badges if present */}
-        {parsedRequirements && (
+        {/* MAS Settings Controls: Toggle & Tone selection */}
+        <div className="flex flex-wrap items-center justify-between text-xs text-surface-600 pt-2 border-t border-surface-100 gap-3">
+          <div className="flex items-center gap-3">
+            <label className="flex items-center gap-2 cursor-pointer font-semibold text-surface-700">
+              <input
+                type="checkbox"
+                checked={useMas}
+                onChange={(e) => setUseMas(e.target.checked)}
+                className="w-4 h-4 rounded text-brand-600 focus:ring-brand-500 border-surface-300"
+              />
+              <span className="flex items-center gap-1.5">
+                <Cpu className="w-3.5 h-3.5 text-brand-600" />
+                Enable Multi-Agent Pipeline (MAS)
+              </span>
+            </label>
+          </div>
+
+          {useMas && (
+            <div className="flex items-center gap-2">
+              <span className="text-surface-400 font-medium">Outreach Tone:</span>
+              <select
+                value={outreachTone}
+                onChange={(e) => setOutreachTone(e.target.value)}
+                className="px-2.5 py-1 bg-surface-50 border border-surface-200 rounded-lg font-medium text-surface-800 focus:outline-none"
+              >
+                <option value="professional">Professional</option>
+                <option value="casual">Casual</option>
+                <option value="technical">Technical Lead</option>
+              </select>
+            </div>
+          )}
+        </div>
+
+        {/* Display Skill Taxonomy Expansion Criteria Badges if present */}
+        {expandedReqs && (
           <div className="mt-3.5 pt-3 border-t border-surface-100 flex flex-wrap items-center gap-2 text-xs text-surface-600">
-            <span className="font-semibold text-surface-400 text-[11px] uppercase tracking-wider mr-1">
-              Search criteria:
+            <span className="font-semibold text-brand-700 text-[11px] uppercase tracking-wider mr-1 flex items-center gap-1">
+              <Bot className="w-3.5 h-3.5 text-brand-600" />
+              Taxonomy Expanded Skills:
             </span>
 
-            {parsedRequirements.skills.map((skill) => (
-              <span
-                key={skill}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-brand-50 text-brand-700 border border-brand-200/60 font-semibold"
-              >
-                <Tag className="w-3 h-3 text-brand-500" />
-                {skill}
-              </span>
-            ))}
-
-            {parsedRequirements.location && (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200/60 font-semibold">
-                <MapPin className="w-3 h-3 text-emerald-500" />
-                {parsedRequirements.location}
-              </span>
-            )}
-
-            {parsedRequirements.min_experience !== null && (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-purple-50 text-purple-700 border border-purple-200/60 font-semibold">
-                <Briefcase className="w-3 h-3 text-purple-500" />
-                {parsedRequirements.min_experience}+ years
-              </span>
-            )}
-
-            {parsedRequirements.job_title && (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-50 text-amber-700 border border-amber-200/60 font-semibold capitalize">
-                <Layers className="w-3 h-3 text-amber-500" />
-                {parsedRequirements.job_title}
-              </span>
-            )}
+            {expandedReqs.expanded_skills?.map((skill) => {
+              const isPrimary = expandedReqs.primary_skills?.includes(skill);
+              return (
+                <span
+                  key={skill}
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md font-semibold border ${
+                    isPrimary
+                      ? 'bg-brand-50 text-brand-700 border-brand-200/80'
+                      : 'bg-emerald-50 text-emerald-700 border-emerald-200/80'
+                  }`}
+                >
+                  <Tag className="w-3 h-3" />
+                  {skill} {isPrimary ? '(Direct)' : '(Taxonomy)'}
+                </span>
+              );
+            })}
           </div>
         )}
       </div>
 
       {/* Manual Filter Controls */}
-      <CandidateFilterToolbar
-        filters={filters}
-        onFilterChange={handleFilterChange}
-        onClearFilters={handleClearSearch}
-        totalResults={pagination.total}
-      />
+      {!useMas && (
+        <CandidateFilterToolbar
+          filters={filters}
+          onFilterChange={handleFilterChange}
+          onClearFilters={handleClearSearch}
+          totalResults={pagination.total}
+        />
+      )}
+
+      {/* Loading Progress State */}
+      {isLoading && (
+        <div className="p-4 rounded-xl bg-brand-50/60 border border-brand-200 text-brand-900 flex items-center gap-3 text-xs shadow-sm animate-pulse">
+          <RefreshCw className="w-4 h-4 text-brand-600 animate-spin shrink-0" />
+          <div className="font-medium">
+            {masStep || 'Understanding requirements, auditing fit scores, and generating outreach...'}
+          </div>
+        </div>
+      )}
 
       {/* Error Alert State */}
       {error && (
         <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 flex items-start gap-3 text-xs">
           <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
           <div className="flex-1">
-            <div className="font-bold">Unable to search candidates</div>
+            <div className="font-bold">Unable to complete the sourcing request</div>
             <div className="mt-0.5 text-red-600">{error}</div>
             <Button
               variant="outline"
@@ -289,7 +362,7 @@ export const Candidates = () => {
               onClick={executeSearch}
               className="mt-3 bg-white text-red-700 border-red-200 hover:bg-red-50"
             >
-              Retry Connection
+              Please try again
             </Button>
           </div>
         </div>
@@ -309,16 +382,16 @@ export const Candidates = () => {
             <div className="w-12 h-12 rounded-2xl bg-brand-50 text-brand-600 border border-brand-100 flex items-center justify-center mx-auto mb-3">
               <Sparkles className="w-6 h-6" />
             </div>
-            <h2 className="text-xl font-bold text-surface-900">Find your next candidate</h2>
+            <h2 className="text-xl font-bold text-surface-900">Multi-Agent Sourcing Engine</h2>
             <p className="text-xs text-surface-500 leading-relaxed">
-              Describe the role, skills, experience, and location you're looking for in plain English.
+              Submit natural-language requirements. Autonomous sub-agents expand tech terms, search candidates, audit fit scores, and draft outreach emails.
             </p>
           </div>
 
           {/* Preset Example Search Pills */}
           <div className="pt-2">
             <div className="text-[11px] font-semibold text-surface-400 uppercase tracking-wider mb-3">
-              Try an example search:
+              Try an example sourcing prompt:
             </div>
             <div className="flex flex-wrap justify-center gap-2 max-w-2xl mx-auto">
               {EXAMPLE_SEARCHES.map((example) => (
@@ -345,13 +418,16 @@ export const Candidates = () => {
         /* Candidates Results Grid */
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {candidates.map((candidate) => (
-              <CandidateCard key={candidate.id} candidate={candidate} />
+            {candidates.map((candResult, idx) => (
+              <CandidateCard
+                key={candResult.candidate?.id || candResult.id || idx}
+                candidate={candResult}
+              />
             ))}
           </div>
 
-          {/* Real MongoDB Pagination Controls */}
-          {pagination.pages > 1 && (
+          {/* Pagination Controls */}
+          {pagination.pages > 1 && !useMas && (
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-surface-200/80">
               <div className="text-xs text-surface-500">
                 Showing Page <span className="font-bold text-surface-900">{page}</span> of{' '}
@@ -366,7 +442,7 @@ export const Candidates = () => {
                   onClick={() => {
                     const newPage = Math.max(1, page - 1);
                     setPage(newPage);
-                    updateUrlParams(activeQuery, filters, newPage);
+                    updateUrlParams(activeQuery, filters, newPage, useMas);
                   }}
                   icon={ChevronLeft}
                 >
@@ -386,7 +462,7 @@ export const Candidates = () => {
                   onClick={() => {
                     const newPage = Math.min(pagination.pages, page + 1);
                     setPage(newPage);
-                    updateUrlParams(activeQuery, filters, newPage);
+                    updateUrlParams(activeQuery, filters, newPage, useMas);
                   }}
                 >
                   <span>Next</span>

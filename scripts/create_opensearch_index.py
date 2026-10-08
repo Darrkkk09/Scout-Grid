@@ -24,8 +24,8 @@ from dotenv import load_dotenv
 load_dotenv(os.path.join(PROJECT_ROOT, ".env"))
 load_dotenv(os.path.join(BACKEND_DIR, ".env"))
 
-from app.services.opensearch_client import create_opensearch_client
-from app.services.opensearch_index import (
+from services.opensearch_client import create_opensearch_client
+from services.opensearch_index import (
     CANDIDATES_INDEX_NAME,
     check_index_exists,
     create_candidate_index,

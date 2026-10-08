@@ -20,7 +20,7 @@ from scripts.benchmark_search import (
     calculate_percentiles,
     extract_stage_names,
 )
-from app.services.requirement_extractor import RequirementExtractor
+from services.requirement_extractor import RequirementExtractor
 
 
 def test_percentile_calculation_empty():

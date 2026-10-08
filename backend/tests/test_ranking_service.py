@@ -1,7 +1,7 @@
 import pytest
-from app.models.candidate import CandidateResponse, ExperienceEntry
-from app.models.search import ParsedRequirements
-from app.services.ranking_service import CandidateRankingService, FeatureScores
+from models.candidate import CandidateResponse, ExperienceEntry
+from models.search import ParsedRequirements
+from services.ranking_service import CandidateRankingService, FeatureScores
 
 
 @pytest.fixture

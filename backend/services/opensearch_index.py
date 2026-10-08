@@ -2,8 +2,8 @@ import logging
 import os
 from typing import Any, Dict, Optional, Tuple
 from opensearchpy import OpenSearch
-from app.services.embedding_service import candidate_to_semantic_text, EmbeddingService
-from app.services.opensearch_client import get_opensearch_client
+from services.embedding_service import candidate_to_semantic_text, EmbeddingService
+from services.opensearch_client import get_opensearch_client
 
 logger = logging.getLogger(__name__)
 

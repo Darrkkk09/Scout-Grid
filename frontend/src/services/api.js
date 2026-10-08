@@ -7,7 +7,7 @@ const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 10000,
+  timeout: 30000,
 });
 
 /**
@@ -53,6 +53,20 @@ export const searchCandidates = async ({ query, page = 1, limit = 20, filters = 
 };
 
 /**
+ * Trigger Multi-Agent Sourcing Pipeline
+ * POST /agents/sourcing
+ */
+export const sourceCandidates = async ({ query, generateOutreach = true, outreachTone = 'professional', topK = 10 }) => {
+  const response = await apiClient.post('/agents/sourcing', {
+    query,
+    generate_outreach: generateOutreach,
+    outreach_tone: outreachTone,
+    top_k: topK,
+  });
+  return response.data;
+};
+
+/**
  * Fetch dashboard analytics overview metrics
  * GET /analytics/dashboard
  */
@@ -78,4 +92,3 @@ export const checkHealth = async () => {
     return { status: 'offline' };
   }
 };
-

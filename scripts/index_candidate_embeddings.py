@@ -30,9 +30,9 @@ from pymongo import MongoClient
 load_dotenv(os.path.join(PROJECT_ROOT, ".env"))
 load_dotenv(os.path.join(BACKEND_DIR, ".env"))
 
-from app.services.embedding_service import EmbeddingService, candidate_to_semantic_text
-from app.services.opensearch_client import create_opensearch_client
-from app.services.opensearch_index import (
+from services.embedding_service import EmbeddingService, candidate_to_semantic_text
+from services.opensearch_client import create_opensearch_client
+from services.opensearch_index import (
     CANDIDATES_INDEX_NAME,
     candidate_to_search_document,
     create_candidate_index,

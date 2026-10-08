@@ -5,8 +5,8 @@ import time
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "backend")))
 
-from app.services.opensearch_client import get_opensearch_client
-from app.services.opensearch_search_service import OpenSearchService
+from services.opensearch_client import get_opensearch_client
+from services.opensearch_search_service import OpenSearchService
 
 async def main():
     service = OpenSearchService(get_opensearch_client())
